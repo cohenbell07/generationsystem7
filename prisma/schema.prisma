@@ -1,0 +1,161 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Users and Plans
+model User {
+  id        String   @id @default(uuid())
+  email     String?  @unique
+  name      String   @default("Demo User")
+  planType  String   @default("FREE") // FREE, IMAGE, SEO, BUNDLE, PRO
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  assets            Asset[]
+  seoPresets        SEOPreset[]
+  postDrafts        PostDraft[]
+  accountConnections AccountConnection[]
+  videoBriefs       VideoBrief[]
+
+  @@map("users")
+}
+
+// Generated images/assets
+model Asset {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  url          String   // Local path or S3 URL
+  filename     String
+  model        String   // "dalle" or "gemini"
+  prompt       String
+  width        Int
+  height       Int
+  platform     String?  // Target platform preset
+
+  // Product compositing metadata
+  hasProduct   Boolean  @default(false)
+  productUrl   String?
+  placement    String?  // "center", "left", "right"
+  scale        Float?
+  rotation     Float?
+
+  costEstimate Float    @default(0.04)
+  createdAt    DateTime @default(now())
+
+  postDrafts PostDraft[]
+
+  @@map("assets")
+}
+
+// SEO-generated content
+model SEOPreset {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  platform    String   // "youtube", "tiktok", "instagram", etc.
+  topic       String
+
+  title       String
+  description String?
+  tags        String   // JSON array as string
+  caption     String
+
+  score       Int      @default(0)
+  reasons     String   // JSON array as string
+  improvements String  // JSON array as string
+
+  createdAt   DateTime @default(now())
+
+  @@map("seo_presets")
+}
+
+// Scheduled posts
+model PostDraft {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  assetId     String?
+  asset       Asset?    @relation(fields: [assetId], references: [id], onDelete: SetNull)
+
+  platform    String    // "instagram", "facebook", "tiktok", etc.
+  caption     String
+  tags        String?   // JSON array as string
+
+  scheduledAt DateTime?
+  publishedAt DateTime?
+  status      String    @default("draft") // "draft", "scheduled", "published", "failed"
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  metrics     Metric[]
+
+  @@map("post_drafts")
+}
+
+// Social platform connections
+model AccountConnection {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  platform     String   // "facebook", "instagram", "tiktok", etc.
+  accountId    String?
+  accountName  String?
+  accessToken  String?  // Encrypted in production
+  refreshToken String?
+  expiresAt    DateTime?
+
+  isActive     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, platform])
+  @@map("account_connections")
+}
+
+// Performance metrics (Pro feature)
+model Metric {
+  id          String   @id @default(uuid())
+  postId      String
+  post        PostDraft @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  impressions Int      @default(0)
+  clicks      Int      @default(0)
+  engagement  Float    @default(0.0)
+
+  recordedAt  DateTime @default(now())
+
+  @@map("metrics")
+}
+
+// Video manual service requests
+model VideoBrief {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name      String
+  email     String
+  brand     String?
+  briefText String
+  assets    String?  // JSON array of file paths
+
+  status    String   @default("submitted") // "submitted", "in_progress", "completed"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("video_briefs")
+}
