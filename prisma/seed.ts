@@ -18,7 +18,7 @@ async function main() {
   const user = await prisma.user.create({
     data: {
       id: 'demo-user-123',
-      email: 'demo@aimarketer.com',
+      email: 'demo@cohengpt.com',
       name: 'Demo User',
       planType: 'BUNDLE', // Has access to Image + SEO + Scheduler
     },

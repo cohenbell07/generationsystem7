@@ -305,7 +305,7 @@ npm run demo
 
 The app includes demo data for testing:
 
-- **Demo User**: `demo@aimarketer.com` (Plan: BUNDLE)
+- **Demo User**: `demo@cohengpt.com` (Plan: BUNDLE)
 - **Sample Images**: 2 pre-generated assets
 - **Sample SEO**: 2 SEO presets (YouTube & Instagram)
 - **Scheduled Posts**: 2 posts scheduled within 5 minutes of seeding
@@ -363,7 +363,7 @@ MIT
 
 ## Support
 
-For questions or issues, please open a GitHub issue or contact hello@aimarketer.com.
+For questions or issues, please open a GitHub issue or contact hello@cohengpt.com.
 
 ---
 
