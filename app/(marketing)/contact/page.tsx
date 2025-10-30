@@ -11,7 +11,7 @@ export default function ContactPage() {
       <header className="border-b bg-white/50 backdrop-blur">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/">
-            <h1 className="text-2xl font-bold">AI Marketer</h1>
+            <h1 className="text-2xl font-bold">CohenGPT</h1>
           </Link>
           <Link href="/studio/image">
             <Button>Go to App</Button>
@@ -25,7 +25,7 @@ export default function ContactPage() {
             <CardHeader>
               <CardTitle className="text-3xl">Get in Touch</CardTitle>
               <CardDescription>
-                Have questions about AI Marketer? We'd love to hear from you.
+                Have questions about CohenGPT? We'd love to hear from you.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -53,8 +53,8 @@ export default function ContactPage() {
 
               <div className="mt-8 pt-8 border-t text-center text-sm text-gray-600">
                 <p>Or email us directly at:</p>
-                <a href="mailto:hello@aimarketer.com" className="font-semibold text-purple-600 hover:underline">
-                  hello@aimarketer.com
+                <a href="mailto:hello@cohengpt.com" className="font-semibold text-purple-600 hover:underline">
+                  hello@cohengpt.com
                 </a>
               </div>
             </CardContent>

@@ -9,8 +9,10 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { PLATFORM_PRESETS } from '@/lib/utils'
 import { Loader2, Download } from 'lucide-react'
+import { useToast } from '@/components/ui/use-toast'
 
 export default function ImageStudioPage() {
+  const { toast } = useToast()
   const [model, setModel] = useState('dalle')
   const [prompt, setPrompt] = useState('')
   const [preset, setPreset] = useState('instagram')
@@ -20,20 +22,51 @@ export default function ImageStudioPage() {
   const [scale, setScale] = useState(0.8)
   const [loading, setLoading] = useState(false)
   const [results, setResults] = useState<any[]>([])
+  const [generatingStatus, setGeneratingStatus] = useState('')
+
+  const handleDownload = async (imageUrl: string, filename: string) => {
+    try {
+      const response = await fetch(imageUrl)
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename || 'cohengpt-image.png'
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      toast({
+        title: 'Download started',
+        description: 'Your image is being downloaded.',
+      })
+    } catch (error) {
+      toast({
+        title: 'Download failed',
+        description: 'Could not download the image. Please try again.',
+      })
+    }
+  }
 
   const handleGenerate = async () => {
     if (!prompt) {
-      alert('Please enter a prompt')
+      toast({
+        title: 'Missing prompt',
+        description: 'Please enter a prompt to generate images.',
+      })
       return
     }
 
     setLoading(true)
     setResults([])
+    setGeneratingStatus('Preparing to generate...')
 
     try {
       // Upload product image if provided
       let productImageUrl = null
       if (productFile && preserveProduct) {
+        setGeneratingStatus('Uploading product image...')
         const formData = new FormData()
         formData.append('file', productFile)
 
@@ -41,11 +74,17 @@ export default function ImageStudioPage() {
           method: 'POST',
           body: formData,
         })
+
+        if (!uploadRes.ok) {
+          throw new Error('Failed to upload product image')
+        }
+
         const uploadData = await uploadRes.json()
         productImageUrl = uploadData.url
       }
 
       // Generate images
+      setGeneratingStatus(`Generating with ${model === 'dalle' ? 'DALL·E 3' : model === 'gemini' ? 'Gemini' : 'Runway'}...`)
       const presetInfo = PLATFORM_PRESETS[preset as keyof typeof PLATFORM_PRESETS]
 
       const response = await fetch('/api/image/generate', {
@@ -69,13 +108,21 @@ export default function ImageStudioPage() {
 
       if (data.success) {
         setResults(data.assets)
+        toast({
+          title: 'Images generated successfully!',
+          description: `Generated ${data.assets.length} image(s) with ${model.toUpperCase()}.`,
+        })
       } else {
-        alert(data.error || 'Generation failed')
+        throw new Error(data.error || 'Generation failed')
       }
     } catch (error: any) {
-      alert(error.message || 'An error occurred')
+      toast({
+        title: 'Image generation failed',
+        description: error.message || 'An error occurred. Please try again.',
+      })
     } finally {
       setLoading(false)
+      setGeneratingStatus('')
     }
   }
 
@@ -212,8 +259,9 @@ export default function ImageStudioPage() {
               </CardHeader>
               <CardContent>
                 {loading && (
-                  <div className="flex items-center justify-center h-64">
-                    <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+                  <div className="flex flex-col items-center justify-center h-64 space-y-4">
+                    <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+                    <p className="text-sm text-gray-600 font-medium">{generatingStatus}</p>
                   </div>
                 )}
 
@@ -224,19 +272,29 @@ export default function ImageStudioPage() {
                 )}
 
                 <div className="grid md:grid-cols-2 gap-4">
-                  {results.map((asset) => (
-                    <div key={asset.id} className="border rounded-lg overflow-hidden">
+                  {results.map((asset, index) => (
+                    <div
+                      key={asset.id}
+                      className="border rounded-lg overflow-hidden animate-in fade-in-50 duration-500"
+                      style={{ animationDelay: `${index * 100}ms` }}
+                    >
                       <div className="relative aspect-square bg-gray-100">
                         <img
                           src={asset.url}
                           alt={asset.prompt}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-contain"
+                          loading="lazy"
                         />
                       </div>
                       <div className="p-4 space-y-2">
                         <p className="text-sm text-gray-600 line-clamp-2">{asset.prompt}</p>
                         <div className="flex gap-2">
-                          <Button size="sm" variant="outline" className="flex-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1"
+                            onClick={() => handleDownload(asset.url, asset.filename)}
+                          >
                             <Download className="w-4 h-4 mr-1" />
                             Download
                           </Button>
