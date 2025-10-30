@@ -100,7 +100,8 @@ export default function ImageStudioPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="dalle">DALL·E 3</SelectItem>
-                      <SelectItem value="gemini">Google Gemini Image</SelectItem>
+                      <SelectItem value="gemini">Google Gemini 1.5 Pro Vision</SelectItem>
+                      <SelectItem value="runway">Runway ML Gen-2</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

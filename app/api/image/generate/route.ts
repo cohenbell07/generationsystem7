@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateWithDalle, estimateDalleCost } from '@/lib/ai/dalle'
 import { generateWithGeminiImage, estimateGeminiCost } from '@/lib/ai/geminiImage'
+import { generateWithRunway, estimateRunwayCost } from '@/lib/ai/runway'
 import { compositeProductImage } from '@/lib/ai/composite'
 import { downloadAndSave, saveFile } from '@/lib/storage'
 import { prisma } from '@/lib/db'
@@ -10,7 +11,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const {
-      model, // "dalle" or "gemini"
+      model, // "dalle", "gemini", or "runway"
       prompt,
       width,
       height,
@@ -54,14 +55,29 @@ export async function POST(request: NextRequest) {
         width,
         height,
         n: Math.min(variations, 2),
+        productImagePath: preserveProduct && productImage ? productImage : undefined,
+      })
+    } else if (model === 'runway') {
+      generatedImages = await generateWithRunway({
+        prompt,
+        width,
+        height,
+        n: Math.min(variations, 2),
       })
     } else {
-      return NextResponse.json({ error: 'Invalid model. Use "dalle" or "gemini"' }, { status: 400 })
+      return NextResponse.json({ error: 'Invalid model. Use "dalle", "gemini", or "runway"' }, { status: 400 })
     }
 
     // Step 2: Download and save generated images
     const assets = []
-    const costPerImage = model === 'dalle' ? estimateDalleCost(`${width}x${height}`) : estimateGeminiCost(`${width}x${height}`)
+    let costPerImage: number
+    if (model === 'dalle') {
+      costPerImage = estimateDalleCost(`${width}x${height}`)
+    } else if (model === 'gemini') {
+      costPerImage = estimateGeminiCost(`${width}x${height}`)
+    } else {
+      costPerImage = estimateRunwayCost(`${width}x${height}`)
+    }
 
     for (let i = 0; i < generatedImages.length; i++) {
       const genImage = generatedImages[i]
