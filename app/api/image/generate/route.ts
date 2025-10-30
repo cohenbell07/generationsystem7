@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       width,
       height,
       platform,
-      userId = 'demo-user-123',
+      userId, // Optional: only provided when user is authenticated
       productImage, // Optional: base64 data URL or existing file path
       preserveProduct = false,
       placement = 'center',
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
       // Save to database
       const asset = await prisma.asset.create({
         data: {
-          userId,
+          userId: userId || null, // Allow null for unauthenticated users
           url: finalImagePath,
           filename: finalImagePath.split('/').pop() || '',
           model,

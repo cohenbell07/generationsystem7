@@ -31,8 +31,8 @@ model User {
 // Generated images/assets
 model Asset {
   id           String   @id @default(uuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   url          String   // Local path or S3 URL
   filename     String
