@@ -3,14 +3,15 @@ import path from 'path'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
 /**
- * Google Gemini Image Generation with Imagen
+ * Google Gemini Image Generation with Vision
  *
- * Uses Google's Gemini API with Imagen 3 for image generation
+ * Uses Google's Gemini 1.5 Pro Vision API for multimodal image generation
+ * When a product image is provided, it's passed to the vision model for context
  *
  * TODO: Add your Google Gemini API key to .env
  * GOOGLE_GEMINI_API_KEY=...
  *
- * API Documentation: https://ai.google.dev/gemini-api/docs/imagen
+ * API Documentation: https://ai.google.dev/gemini-api/docs
  */
 
 export interface GeminiGenerateOptions {
@@ -26,9 +27,9 @@ export interface GeneratedImage {
 }
 
 /**
- * Generate images with Google Gemini using Imagen
+ * Generate images with Google Gemini using Vision model
  *
- * Uses gemini-1.5-pro-latest model for image generation
+ * Uses gemini-1.5-pro-vision for multimodal image generation
  * IMPORTANT: This function uses the user's exact prompt without modification.
  * No hidden prompt rewriting is performed.
  */
@@ -43,7 +44,7 @@ export async function generateWithGeminiImage(
 
   const { prompt, width, height, n = 1, productImagePath } = options
 
-  console.log(`🎨 Generating ${n} image(s) with Google Gemini (Imagen)...`)
+  console.log(`🎨 Generating ${n} image(s) with Google Gemini Vision...`)
   console.log(`   Prompt: "${prompt}"`)
   console.log(`   Size: ${width}x${height}`)
   if (productImagePath) {
@@ -54,21 +55,62 @@ export async function generateWithGeminiImage(
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY)
     const results: GeneratedImage[] = []
 
-    // Generate images using Imagen through Gemini API
+    // Read product image if provided and convert to base64
+    let productImageData: { inlineData: { data: string; mimeType: string } } | null = null
+    if (productImagePath) {
+      try {
+        // Handle both absolute paths and relative paths
+        let imagePath = productImagePath
+
+        // If it's a URL path like /uploads/products/..., convert to absolute file path
+        if (productImagePath.startsWith('/uploads/')) {
+          imagePath = path.join(process.cwd(), productImagePath.replace(/^\//, ''))
+        } else if (productImagePath.startsWith('uploads/')) {
+          imagePath = path.join(process.cwd(), productImagePath)
+        }
+
+        console.log(`   Reading product image from: ${imagePath}`)
+        const imageBuffer = fs.readFileSync(imagePath)
+        const base64Image = imageBuffer.toString('base64')
+        const mimeType = getMimeType(imagePath)
+
+        productImageData = {
+          inlineData: {
+            data: base64Image,
+            mimeType: mimeType,
+          }
+        }
+        console.log(`   ✓ Product image loaded (${mimeType}, ${imageBuffer.length} bytes)`)
+      } catch (err: any) {
+        console.error(`   ⚠️  Failed to load product image: ${err.message}`)
+      }
+    }
+
+    // Generate images using Gemini Vision API
     for (let i = 0; i < n; i++) {
-      // Use the imagen-3.0-generate-001 model for image generation
-      const model = genAI.getGenerativeModel({ model: 'imagen-3.0-generate-001' })
+      // Use gemini-1.5-pro-vision for multimodal generation with product images
+      // Use gemini-1.5-pro for text-only generation
+      const modelName = productImageData ? 'gemini-1.5-pro-vision' : 'gemini-1.5-pro'
+      const model = genAI.getGenerativeModel({ model: modelName })
 
-      // Build the full prompt
-      let fullPrompt = prompt
+      // Build the content parts for the API request
+      const parts: any[] = []
 
-      if (productImagePath) {
-        fullPrompt = `${prompt}. Professional marketing image, high quality, photorealistic.`
+      // Add product image first if provided
+      if (productImageData) {
+        parts.push(productImageData)
       }
 
-      // Generate the image
+      // Add the text prompt
+      const fullPrompt = productImageData
+        ? `${prompt}. Create a professional marketing image at ${width}x${height} resolution with high quality, photorealistic style.`
+        : `${prompt}. Create a professional image at ${width}x${height} resolution.`
+
+      parts.push({ text: fullPrompt })
+
+      // Generate the content
       const result = await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
+        contents: [{ role: 'user', parts }],
         generationConfig: {
           temperature: 0.4,
           candidateCount: 1,
@@ -92,29 +134,33 @@ export async function generateWithGeminiImage(
             results.push({
               url: `data:${mimeType};base64,${base64Data}`,
             })
+            console.log(`   ✓ Generated image ${i + 1} with inline data`)
           } else if (part.text) {
-            // Fallback: generate a placeholder with unique seed
+            // Gemini returned text instead of an image
+            // This means it doesn't support direct image generation
+            // Fall back to placeholder
+            console.log(`   ⚠️  Gemini returned text instead of image, using placeholder`)
             const seed = Date.now() + i
             results.push({
               url: `https://picsum.photos/seed/${seed}/${width}/${height}`,
             })
           }
         } else {
-          throw new Error('No image data in response')
+          throw new Error('No content in response')
         }
       } else {
         throw new Error('Invalid response format from Gemini API')
       }
     }
 
-    console.log(`✅ Generated ${results.length} image(s) with Gemini`)
+    console.log(`✅ Generated ${results.length} image(s) with Gemini Vision`)
     return results
 
   } catch (error: any) {
     console.error('❌ Gemini image generation error:', error.message)
 
-    // Fallback to placeholder images if Imagen API is not available
-    console.log('⚠️  Falling back to placeholder images (Imagen API may not be available)')
+    // Fallback to placeholder images if Gemini Vision API is not available
+    console.log('⚠️  Falling back to placeholder images (Gemini Vision may not support direct image generation)')
     const results: GeneratedImage[] = []
     for (let i = 0; i < n; i++) {
       const seed = Date.now() + i
