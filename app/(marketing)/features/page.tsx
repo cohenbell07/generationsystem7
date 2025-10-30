@@ -7,7 +7,7 @@ export default function FeaturesPage() {
       <header className="border-b bg-white/50 backdrop-blur">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/">
-            <h1 className="text-2xl font-bold">AI Marketer</h1>
+            <h1 className="text-2xl font-bold">CohenGPT</h1>
           </Link>
           <Link href="/studio/image">
             <Button>Go to App</Button>

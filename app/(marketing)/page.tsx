@@ -9,7 +9,7 @@ export default function HomePage() {
       {/* Header */}
       <header className="border-b bg-white/50 backdrop-blur">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">AI Marketer</h1>
+          <h1 className="text-2xl font-bold">CohenGPT</h1>
           <nav className="hidden md:flex items-center gap-6">
             <Link href="/features" className="text-sm hover:underline">
               Features
@@ -142,7 +142,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t bg-gray-50 py-12">
         <div className="container mx-auto px-4 text-center text-sm text-gray-600">
-          <p>&copy; 2024 AI Marketer. All rights reserved.</p>
+          <p>&copy; 2024 CohenGPT. All rights reserved.</p>
           <div className="flex gap-4 justify-center mt-4">
             <Link href="/features" className="hover:underline">
               Features

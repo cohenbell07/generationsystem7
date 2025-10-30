@@ -2,11 +2,12 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { startScheduler } from '@/lib/jobs/scheduler'
+import { Toaster } from '@/components/ui/toaster'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'AI Marketer - AI-Powered Marketing Tools',
+  title: 'CohenGPT - AI-Powered Marketing Tools',
   description: 'Generate stunning images, SEO-optimized content, and schedule posts across platforms',
 }
 
@@ -28,7 +29,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        {children}
+        <Toaster />
+      </body>
     </html>
   )
 }

@@ -1,4 +1,4 @@
-# AI Marketer
+# CohenGPT
 
 A complete, production-ready AI-powered marketing platform built with Next.js 14, TypeScript, and Tailwind CSS. Generate stunning ad-grade images, SEO-optimized content, and schedule posts across multiple social media platforms—all in one place.
 

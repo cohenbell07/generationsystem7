@@ -8,7 +8,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <aside className="w-64 bg-white border-r flex flex-col">
         <div className="p-6 border-b">
           <Link href="/">
-            <h1 className="text-xl font-bold">AI Marketer</h1>
+            <h1 className="text-xl font-bold">CohenGPT</h1>
           </Link>
         </div>
 
