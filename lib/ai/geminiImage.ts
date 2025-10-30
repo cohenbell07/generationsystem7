@@ -29,7 +29,7 @@ export interface GeneratedImage {
 /**
  * Generate images with Google Gemini using Vision model
  *
- * Uses gemini-1.5-pro-vision for multimodal image generation
+ * Uses gemini-1.5-pro for multimodal image generation (supports text + images)
  * IMPORTANT: This function uses the user's exact prompt without modification.
  * No hidden prompt rewriting is performed.
  */
@@ -88,9 +88,8 @@ export async function generateWithGeminiImage(
 
     // Generate images using Gemini Vision API
     for (let i = 0; i < n; i++) {
-      // Use gemini-1.5-pro-vision for multimodal generation with product images
-      // Use gemini-1.5-pro for text-only generation
-      const modelName = productImageData ? 'gemini-1.5-pro-vision' : 'gemini-1.5-pro'
+      // Use gemini-1.5-pro for multimodal generation (supports both text and images)
+      const modelName = 'gemini-1.5-pro'
       const model = genAI.getGenerativeModel({ model: modelName })
 
       // Build the content parts for the API request
