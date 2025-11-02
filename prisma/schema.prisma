@@ -15,15 +15,30 @@ model User {
   id        String   @id @default(uuid())
   email     String?  @unique
   name      String   @default("Demo User")
-  planType  String   @default("FREE") // FREE, IMAGE, SEO, BUNDLE, PRO
+  planType  String   @default("FREE") // FREE, STARTER, PRO, ELITE, GROWTH_MASTER
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  assets            Asset[]
-  seoPresets        SEOPreset[]
-  postDrafts        PostDraft[]
+  // Existing relations
+  assets             Asset[]
+  seoPresets         SEOPreset[]
+  postDrafts         PostDraft[]
   accountConnections AccountConnection[]
-  videoBriefs       VideoBrief[]
+  videoBriefs        VideoBrief[]
+
+  // New marketing suite relations
+  templates          PostTemplate[]
+  strategies         MarketingStrategy[]
+  adCampaigns        AdCampaign[]
+  competitors        CompetitorProfile[]
+  achievements       Achievement[]
+  leads              Lead[]
+  reputations        Reputation[]
+  spokespersons      SpokesPersonVideo[]
+  roiAttributions    ROIAttribution[]
+  growthPredictions  GrowthPrediction[]
+  abTests            ABTest[]
+  calendarEvents     CalendarEvent[]
 
   @@map("users")
 }
@@ -158,4 +173,466 @@ model VideoBrief {
   updatedAt DateTime @updatedAt
 
   @@map("video_briefs")
+}
+
+// ============================================
+// PHASE 1: USER-FACING FEATURE MODULES
+// ============================================
+
+// Feature 1: Post Templates by Industry
+model PostTemplate {
+  id          String   @id @default(uuid())
+  userId      String?  // null = system template, set = user custom
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name        String   // "Realtor Open House", "Car Dealership Sale"
+  industry    String   // "realtor", "automotive", "medspa", "restaurant"
+  platform    String   // Target platform
+
+  title       String
+  description String?
+  fields      String   // JSON: [{"name": "property_address", "type": "text", "label": "Property Address"}]
+
+  imagePrompt String?  // Template for image generation
+  captionTemplate String? // Template with {{placeholders}}
+
+  isPublic    Boolean  @default(false)
+  usageCount  Int      @default(0)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("post_templates")
+}
+
+// Feature 3: Smart Social Calendar System
+model CalendarEvent {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  postId          String?   // Link to PostDraft if scheduled post
+
+  title           String
+  description     String?
+  platform        String?
+
+  startTime       DateTime
+  endTime         DateTime?
+
+  googleEventId   String?   // Google Calendar event ID
+  isAIOptimized   Boolean   @default(false) // Was time chosen by AI?
+  aiReasoning     String?   // Why AI chose this time
+
+  status          String    @default("scheduled") // "scheduled", "published", "cancelled"
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("calendar_events")
+}
+
+// ============================================
+// PHASE 2: AI SYSTEMS
+// ============================================
+
+// Feature 6: Auto-Iterate Post System (A/B Testing)
+model ABTest {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name        String   // "Caption Style Test - Week 12"
+  testType    String   // "caption", "thumbnail", "hashtags", "timing"
+
+  variantA    String   // JSON: post data
+  variantB    String   // JSON: post data
+
+  variantAPostId String?
+  variantBPostId String?
+
+  // Results
+  variantAImpressions Int @default(0)
+  variantBImpressions Int @default(0)
+  variantAEngagement  Float @default(0)
+  variantBEngagement  Float @default(0)
+
+  winner      String?  // "A", "B", or null if ongoing
+  confidence  Float?   // Statistical confidence 0-1
+
+  insights    String?  // AI-generated learnings
+
+  startedAt   DateTime @default(now())
+  endedAt     DateTime?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("ab_tests")
+}
+
+// Feature 7: AI Marketing Brain (Strategic Insights)
+model MarketingStrategy {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  weekNumber  Int      // Week of year
+  year        Int
+
+  // Analysis
+  topPerformingStyle String? // "emotional", "promotional", "educational"
+  bestPostingTimes   String? // JSON: ["17:00", "20:00"]
+  contentGaps        String? // JSON: ["testimonials", "behind-the-scenes"]
+
+  // Recommendations
+  recommendations String  // JSON array of action items
+  priorityScore   Float   @default(0) // 0-10 urgency
+
+  // Performance comparison
+  weekOverWeekGrowth Float? // % change in engagement
+
+  status      String   @default("active") // "active", "archived"
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, year, weekNumber])
+  @@map("marketing_strategies")
+}
+
+// Feature 8: AI Ad Manager
+model AdCampaign {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name        String
+  platform    String   // "meta", "google", "tiktok"
+
+  sourcePostId String? // Post that inspired this ad
+
+  objective   String   // "awareness", "traffic", "conversions"
+  targetAudience String? // JSON: audience targeting params
+
+  budget      Float    // Daily budget
+  currency    String   @default("USD")
+
+  status      String   @default("draft") // "draft", "pending", "active", "paused", "completed"
+
+  platformCampaignId String? // ID from Meta/Google/TikTok
+
+  // Performance (synced from platform)
+  impressions Int      @default(0)
+  clicks      Int      @default(0)
+  conversions Int      @default(0)
+  spend       Float    @default(0)
+
+  startDate   DateTime?
+  endDate     DateTime?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  variations  AdVariation[]
+
+  @@map("ad_campaigns")
+}
+
+model AdVariation {
+  id          String   @id @default(uuid())
+  campaignId  String
+  campaign    AdCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  name        String   // "Variation A", "Variation B"
+
+  headline    String
+  primaryText String
+  description String?
+
+  imageUrl    String?
+  videoUrl    String?
+
+  callToAction String? // "Learn More", "Shop Now", "Sign Up"
+
+  // Performance
+  impressions Int   @default(0)
+  clicks      Int   @default(0)
+  conversions Int   @default(0)
+  ctr         Float @default(0) // Click-through rate
+
+  isActive    Boolean @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("ad_variations")
+}
+
+// Feature 9: Competitor Intelligence Scanner
+model CompetitorProfile {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name        String
+  platform    String   // "instagram", "facebook", "tiktok"
+  handle      String   // @username
+
+  // Profile stats (scraped/API)
+  followers   Int      @default(0)
+  following   Int      @default(0)
+  postsCount  Int      @default(0)
+
+  // Analysis
+  avgEngagement Float  @default(0)
+  postFrequency Float  @default(0) // posts per week
+
+  topContentTypes String? // JSON: ["video", "carousel", "reels"]
+  topHashtags     String? // JSON: most used hashtags
+
+  lastScrapedAt DateTime?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  posts       CompetitorPost[]
+
+  @@unique([userId, platform, handle])
+  @@map("competitor_profiles")
+}
+
+model CompetitorPost {
+  id            String   @id @default(uuid())
+  competitorId  String
+  competitor    CompetitorProfile @relation(fields: [competitorId], references: [id], onDelete: Cascade)
+
+  platformPostId String  // Original post ID
+
+  contentType   String   // "image", "video", "carousel", "text"
+  caption       String?
+  hashtags      String?  // JSON array
+
+  mediaUrl      String?
+  thumbnailUrl  String?
+
+  likes         Int      @default(0)
+  comments      Int      @default(0)
+  shares        Int      @default(0)
+  views         Int?
+
+  postedAt      DateTime
+  scrapedAt     DateTime @default(now())
+
+  @@map("competitor_posts")
+}
+
+// ============================================
+// PHASE 3: INFRASTRUCTURE + GROWTH STACK
+// ============================================
+
+// Feature 10: Next-Level Analytics Dashboard (Gamification)
+model Achievement {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type        String   // "posts_published", "engagement_rate", "follower_milestone"
+  tier        String   // "novice", "intermediate", "pro", "expert", "master"
+
+  name        String   // "First 10 Posts", "Engagement Champion"
+  description String
+
+  currentValue Float   @default(0)
+  targetValue  Float
+
+  progress    Float    @default(0) // 0-100%
+  isUnlocked  Boolean  @default(false)
+
+  unlockedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("achievements")
+}
+
+// Feature 11: CRM + AI Lead Nurture
+model Lead {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name        String?
+  email       String?
+  phone       String?
+
+  source      String   // "instagram_dm", "tiktok_comment", "website_form"
+  platform    String?
+  platformUserId String? // Their social media user ID
+
+  // Lead scoring
+  score       Int      @default(0) // 0-100
+  scoreFactors String? // JSON: reasons for score
+
+  status      String   @default("new") // "new", "contacted", "qualified", "converted", "lost"
+
+  // Engagement
+  lastContactedAt DateTime?
+  nextFollowUpAt  DateTime?
+
+  notes       String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  interactions LeadInteraction[]
+
+  @@map("leads")
+}
+
+model LeadInteraction {
+  id          String   @id @default(uuid())
+  leadId      String
+  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  type        String   // "dm_sent", "comment_reply", "email", "call"
+  platform    String?
+
+  message     String?  // AI-generated or manual
+  response    String?  // Their response
+
+  isAutomated Boolean  @default(false)
+  sentiment   String?  // "positive", "neutral", "negative"
+
+  createdAt   DateTime @default(now())
+
+  @@map("lead_interactions")
+}
+
+// Feature 12: Reputation Monitoring + Response
+model Reputation {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  source      String   // "google_reviews", "facebook", "instagram", "tiktok"
+  sourceId    String?  // Original review/comment ID
+
+  authorName  String?
+  authorHandle String?
+
+  content     String
+  rating      Int?     // 1-5 stars (if applicable)
+
+  sentiment   String   @default("neutral") // "positive", "neutral", "negative"
+  sentimentScore Float @default(0.5) // 0-1
+
+  // Response
+  hasResponded Boolean  @default(false)
+  response     String?  // AI-drafted or manual
+  respondedAt  DateTime?
+
+  isPublic    Boolean  @default(true)
+  isAddressed Boolean  @default(false)
+
+  detectedAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("reputations")
+}
+
+// Feature 13: AI Spokesperson Engine
+model SpokesPersonVideo {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name        String   // "Product Launch Video"
+
+  avatarId    String?  // Synthesia/HeyGen avatar ID
+  voiceId     String?  // Voice selection
+
+  script      String   // AI-generated or manual script
+
+  videoUrl    String?  // Generated video URL
+  thumbnailUrl String?
+
+  duration    Int?     // seconds
+
+  provider    String   @default("heygen") // "heygen", "synthesia"
+  providerId  String?  // Provider's video ID
+
+  status      String   @default("draft") // "draft", "generating", "completed", "failed"
+
+  costEstimate Float   @default(0)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("spokesperson_videos")
+}
+
+// Feature 14: ROI Attribution Engine
+model ROIAttribution {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  source      String   // "instagram_post", "facebook_ad", "tiktok_video"
+  sourceId    String?  // Post/campaign ID
+
+  platform    String
+
+  // Attribution data
+  clicks      Int      @default(0)
+  conversions Int      @default(0)
+  revenue     Float    @default(0)
+
+  currency    String   @default("USD")
+
+  // Attribution window
+  attributionWindow Int @default(7) // days
+
+  // External tracking
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+
+  trackingDate DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("roi_attributions")
+}
+
+// Feature 15: Predictive Growth Simulator
+model GrowthPrediction {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  scenario    String   // "3x posting frequency", "add video content"
+
+  // Input parameters
+  currentPostFrequency Float // posts per week
+  predictedPostFrequency Float
+
+  currentEngagementRate Float
+  currentFollowers Int
+  currentRevenue Float?
+
+  // Predictions (30-day outlook)
+  predictedEngagementRate Float
+  predictedFollowers Int
+  predictedRevenue Float?
+  predictedRevenueIncrease Float? // percentage
+
+  confidence  Float    @default(0.7) // 0-1
+
+  methodology String?  // AI explanation of prediction
+
+  createdAt   DateTime @default(now())
+
+  @@map("growth_predictions")
 }
