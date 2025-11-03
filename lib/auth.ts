@@ -12,16 +12,17 @@ export function isSuperuserRequest(): boolean {
 
 /**
  * Get user plan with superuser override
+ * Superusers get PRO access (unlimited access to all features)
  */
 export function getUserPlan(userPlan: PlanType | string = 'FREE'): PlanType {
   if (isSuperuserRequest()) {
-    return 'PRO' // Superuser gets PRO access
+    return 'PRO' // Superuser gets PRO access (highest tier with unlimited everything)
   }
-  
+
   if (userPlan in PLANS) {
     return userPlan as PlanType
   }
-  
+
   return 'FREE'
 }
 

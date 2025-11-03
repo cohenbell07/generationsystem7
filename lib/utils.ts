@@ -9,7 +9,7 @@ export function cn(...inputs: ClassValue[]) {
  * Check if user is a superuser based on adminpw query param
  */
 export function isSuperuser(searchParams: URLSearchParams): boolean {
-  const adminPassword = process.env.ADMIN_PASSWORD || 'YOURPASSWORD'
+  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123'
   const providedPassword = searchParams.get('adminpw')
   return providedPassword === adminPassword
 }

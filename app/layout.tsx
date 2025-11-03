@@ -1,10 +1,14 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+// Note: Google Fonts require network access during build
+// Uncomment the line below when deploying to production
+// import { Inter } from 'next/font/google'
 import './globals.css'
 import { startScheduler } from '@/lib/jobs/scheduler'
 import { Toaster } from '@/components/ui/toaster'
 
-const inter = Inter({ subsets: ['latin'] })
+// For development/offline builds, use system fonts
+// const inter = Inter({ subsets: ['latin'] })
+const inter = { className: 'font-sans' }
 
 export const metadata: Metadata = {
   title: 'CohenGPT - AI-Powered Marketing Tools',

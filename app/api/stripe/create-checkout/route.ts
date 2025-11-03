@@ -2,12 +2,27 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { PLANS } from '@/lib/plans'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2024-11-20.acacia',
-})
+// Initialize Stripe only if API key is available
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2025-10-29.clover',
+    })
+  : null
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if Stripe is configured
+    if (!stripe) {
+      return NextResponse.json(
+        {
+          error: 'Stripe is not configured. Please add STRIPE_SECRET_KEY to your .env file.',
+          mock: true,
+          message: 'In development mode, use ?adminpw=admin123 to bypass payment requirements.',
+        },
+        { status: 503 }
+      )
+    }
+
     const body = await request.json()
     const { planId, userId } = body
 

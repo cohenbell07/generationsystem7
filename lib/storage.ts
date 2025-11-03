@@ -45,6 +45,7 @@ export async function saveFile(
 
 /**
  * Download a file from URL and save to local storage
+ * Supports both HTTP URLs and data URLs (data:image/png;base64,...)
  */
 export async function downloadAndSave(
   url: string,
@@ -58,7 +59,22 @@ export async function downloadAndSave(
 
   const filepath = path.join(dir, filename)
 
-  // Download file
+  // Handle data URLs (e.g., data:image/png;base64,...)
+  if (url.startsWith('data:')) {
+    const matches = url.match(/^data:([^;]+);base64,(.+)$/)
+    if (!matches) {
+      throw new Error('Invalid data URL format')
+    }
+
+    const base64Data = matches[2]
+    const buffer = Buffer.from(base64Data, 'base64')
+    await fs.writeFile(filepath, buffer)
+
+    const relativePath = subdirectory ? `${subdirectory}/${filename}` : filename
+    return `/uploads/${relativePath}`
+  }
+
+  // Handle regular HTTP/HTTPS URLs
   const response = await fetch(url)
   if (!response.ok || !response.body) {
     throw new Error(`Failed to download file: ${response.statusText}`)

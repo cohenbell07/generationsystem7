@@ -65,12 +65,14 @@ export async function generateWithDalle(
 
     const results: GeneratedImage[] = []
 
-    for (const image of response.data) {
-      if (image.url) {
-        results.push({
-          url: image.url,
-          revisedPrompt: image.revised_prompt,
-        })
+    if (response.data) {
+      for (const image of response.data) {
+        if (image.url) {
+          results.push({
+            url: image.url,
+            revisedPrompt: image.revised_prompt,
+          })
+        }
       }
     }
 
