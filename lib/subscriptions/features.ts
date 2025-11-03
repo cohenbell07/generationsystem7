@@ -235,46 +235,29 @@ export const FEATURE_TIER_MAP: Record<Feature, SubscriptionTier> = {
 
 /**
  * Check if user has access to a feature
+ * UNLOCKED: All features are accessible to all users by default
  */
 export function hasFeatureAccess(
   userTier: SubscriptionTier,
   feature: Feature
 ): boolean {
-  const requiredTier = FEATURE_TIER_MAP[feature]
-  const tierOrder = [
-    SubscriptionTier.FREE,
-    SubscriptionTier.STARTER,
-    SubscriptionTier.PRO,
-    SubscriptionTier.ELITE,
-    SubscriptionTier.GROWTH_MASTER,
-  ]
-
-  const userTierIndex = tierOrder.indexOf(userTier)
-  const requiredTierIndex = tierOrder.indexOf(requiredTier)
-
-  return userTierIndex >= requiredTierIndex
+  // Always return true - all features unlocked for everyone
+  // Pricing tiers remain displayed but don't block functionality
+  return true
 }
 
 /**
  * Check if user is within usage limits
+ * UNLOCKED: All users have unlimited usage by default
  */
 export function checkLimit(
   userTier: SubscriptionTier,
   limitType: keyof TierLimits,
   currentUsage: number
 ): { allowed: boolean; limit: number; remaining: number } {
-  const config = TIER_CONFIGS[userTier]
-  const limit = config.limits[limitType] as number
-
-  // -1 means unlimited
-  if (limit === -1) {
-    return { allowed: true, limit: -1, remaining: -1 }
-  }
-
-  const allowed = currentUsage < limit
-  const remaining = Math.max(0, limit - currentUsage)
-
-  return { allowed, limit, remaining }
+  // Always return unlimited access - all features unlocked for everyone
+  // Pricing tiers remain displayed but don't block functionality
+  return { allowed: true, limit: -1, remaining: -1 }
 }
 
 /**

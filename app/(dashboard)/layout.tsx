@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Image, Zap, Calendar, BarChart, Video, Home } from 'lucide-react'
+import { Image, Zap, Calendar, BarChart, Video, Home, Sparkles, FileText } from 'lucide-react'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -13,6 +13,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         <nav className="flex-1 p-4 space-y-1">
+          <Link
+            href="/studio/ai-features"
+            className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-gray-100 transition bg-blue-50 border border-blue-200"
+          >
+            <Sparkles className="w-5 h-5 text-blue-600" />
+            <span className="font-semibold text-blue-900">AI Features Hub</span>
+          </Link>
+
+          <div className="py-2"></div>
+
           <Link
             href="/studio/image"
             className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-gray-100 transition"
@@ -30,6 +40,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </Link>
 
           <Link
+            href="/studio/templates"
+            className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-gray-100 transition"
+          >
+            <FileText className="w-5 h-5" />
+            <span>Templates</span>
+          </Link>
+
+          <Link
             href="/studio/scheduler"
             className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-gray-100 transition"
           >
@@ -43,9 +61,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           >
             <BarChart className="w-5 h-5" />
             <span>Analytics</span>
-            <span className="ml-auto text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
-              Pro
-            </span>
           </Link>
 
           <Link
@@ -70,7 +85,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="p-4 border-t">
           <div className="text-xs text-gray-500">
             <p className="font-semibold">Demo User</p>
-            <p>Bundle Plan</p>
+            <p className="text-green-600 font-semibold">All Features Unlocked</p>
           </div>
         </div>
       </aside>

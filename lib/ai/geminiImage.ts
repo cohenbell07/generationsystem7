@@ -36,13 +36,20 @@ export interface GeneratedImage {
 export async function generateWithGeminiImage(
   options: GeminiGenerateOptions
 ): Promise<GeneratedImage[]> {
-  if (!process.env.GOOGLE_GEMINI_API_KEY) {
-    throw new Error(
-      'GOOGLE_GEMINI_API_KEY is not set. Please add it to your .env file.'
-    )
-  }
-
   const { prompt, width, height, n = 1, productImagePath } = options
+
+  // FALLBACK MODE: If no API key, return dummy/test images
+  if (!process.env.GOOGLE_GEMINI_API_KEY) {
+    console.log('⚠️  GOOGLE_GEMINI_API_KEY not set - using fallback test images')
+    const results: GeneratedImage[] = []
+    for (let i = 0; i < n; i++) {
+      const seed = Date.now() + i
+      results.push({
+        url: `https://picsum.photos/seed/${seed}/${width}/${height}`,
+      })
+    }
+    return results
+  }
 
   console.log(`🎨 Generating ${n} image(s) with Google Gemini Vision...`)
   console.log(`   Prompt: "${prompt}"`)

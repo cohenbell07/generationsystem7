@@ -39,13 +39,29 @@ export interface SEOOutput {
  * Generate platform-specific SEO content
  */
 export async function generateSEO(options: GenerateSEOOptions): Promise<SEOOutput> {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY is not set. Please add it to your .env file.')
-  }
-
   const { platform, topic, tone = 'neutral', externalSignals } = options
 
   const profile = getPlatformProfile(platform)
+
+  // FALLBACK MODE: If no API key, return dummy/test SEO content
+  if (!process.env.OPENAI_API_KEY) {
+    console.log('⚠️  OPENAI_API_KEY not set - using fallback test SEO content')
+
+    const dummyHashtags = ['#marketing', '#socialmedia', '#contentcreation', '#digitalmarketing', '#business']
+    const dummyKeywords = ['marketing', 'social media', 'content', 'engagement', 'growth']
+
+    return {
+      title: `[DEMO] ${topic.substring(0, 60)}`,
+      description: `Example ${profile.name} content for "${topic}" - This is a demo description showing how your content would look with AI optimization.`,
+      tags: dummyHashtags.slice(0, profile.maxTags),
+      caption: `🚀 Exciting content about ${topic}! Check this out and let me know what you think. ${dummyHashtags.slice(0, 3).join(' ')} [DEMO MODE]`,
+      keywords: dummyKeywords,
+      hashtags: dummyHashtags,
+      metaDescription: `Learn about ${topic} with expert insights and actionable tips. [Demo content]`,
+      metaKeywords: [...dummyKeywords, topic.split(' ')[0]],
+      suggestedHashtags: ['#trending', '#viral', '#success', '#growth', '#innovation'],
+    }
+  }
   if (!profile) {
     throw new Error(`Unknown platform: ${platform}`)
   }

@@ -128,63 +128,28 @@ export const PLANS: Record<PlanType, Plan> = {
 
 /**
  * Check if user has access to a feature
+ * UNLOCKED: All features are accessible to all users by default
  */
 export function hasFeatureAccess(userPlan: PlanType, feature: string): boolean {
-  switch (feature) {
-    case 'image-generation':
-      return ['STARTER', 'IMAGE', 'BUNDLE', 'PRO'].includes(userPlan)
-
-    case 'seo-generation':
-      return ['STARTER', 'SEO', 'BUNDLE', 'PRO'].includes(userPlan)
-
-    case 'scheduler':
-      return ['STARTER', 'BUNDLE', 'PRO'].includes(userPlan)
-
-    case 'video-generation':
-      return ['STARTER', 'BUNDLE', 'PRO'].includes(userPlan)
-
-    case 'analytics':
-      return userPlan === 'PRO'
-
-    case 'autoposting':
-      return userPlan === 'PRO'
-
-    case 'best-times':
-      return userPlan === 'PRO'
-
-    case 'auto-resize':
-      return ['BUNDLE', 'PRO'].includes(userPlan)
-
-    default:
-      return false
-  }
+  // Always return true - all features unlocked for everyone
+  // Pricing tiers remain displayed but don't block functionality
+  return true
 }
 
 /**
  * Check if user is within limits
+ * UNLOCKED: All users have unlimited usage by default
  */
 export function isWithinLimits(
   userPlan: PlanType,
   usage: { images?: number; seo?: number; posts?: number; videos?: number }
 ): { images: boolean; seo: boolean; posts: boolean; videos: boolean } {
-  const plan = PLANS[userPlan]
-
+  // Always return unlimited access - all features unlocked for everyone
+  // Pricing tiers remain displayed but don't block functionality
   return {
-    images:
-      !plan.limits.imageGenerations ||
-      plan.limits.imageGenerations === -1 ||
-      (usage.images || 0) < plan.limits.imageGenerations,
-    seo:
-      !plan.limits.seoGenerations ||
-      plan.limits.seoGenerations === -1 ||
-      (usage.seo || 0) < plan.limits.seoGenerations,
-    posts:
-      !plan.limits.scheduledPosts ||
-      plan.limits.scheduledPosts === -1 ||
-      (usage.posts || 0) < plan.limits.scheduledPosts,
-    videos:
-      !plan.limits.videoGenerations ||
-      plan.limits.videoGenerations === -1 ||
-      (usage.videos || 0) < plan.limits.videoGenerations,
+    images: true,
+    seo: true,
+    posts: true,
+    videos: true,
   }
 }

@@ -4,10 +4,11 @@ import type { PlanType } from './plans'
 
 /**
  * Check if current request is from a superuser
+ * UNLOCKED: All requests have full access by default
  */
 export function isSuperuserRequest(): boolean {
-  const headersList = headers()
-  return headersList.get('x-superuser') === 'true'
+  // Always return true - all features unlocked for everyone
+  return true
 }
 
 /**

@@ -32,13 +32,21 @@ export interface GeneratedImage {
 export async function generateWithDalle(
   options: DalleGenerateOptions
 ): Promise<GeneratedImage[]> {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error(
-      'OPENAI_API_KEY is not set. Please add it to your .env file.'
-    )
-  }
-
   const { prompt, width, height, n = 1 } = options
+
+  // FALLBACK MODE: If no API key, return dummy/test images
+  if (!process.env.OPENAI_API_KEY) {
+    console.log('⚠️  OPENAI_API_KEY not set - using fallback test images')
+    const results: GeneratedImage[] = []
+    for (let i = 0; i < n; i++) {
+      const seed = Date.now() + i
+      results.push({
+        url: `https://picsum.photos/seed/${seed}/${width}/${height}`,
+        revisedPrompt: `[DEMO MODE] Generated image for: "${prompt}"`,
+      })
+    }
+    return results
+  }
 
   // DALL·E 3 only supports specific sizes
   let size: '1024x1024' | '1792x1024' | '1024x1792' = '1024x1024'
