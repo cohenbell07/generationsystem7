@@ -47,10 +47,11 @@ let openaiClient: OpenAI | null = null
 let anthropicClient: Anthropic | null = null
 let geminiClient: GoogleGenerativeAI | null = null
 
-function getOpenAI(): OpenAI {
+function getOpenAI(): OpenAI | null {
   if (!openaiClient) {
     if (!process.env.OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY not configured')
+      console.log('⚠️  OPENAI_API_KEY not configured - fallback mode enabled')
+      return null
     }
     openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
   }
@@ -92,6 +93,22 @@ export async function callGPT(
   options: LLMOptions = {}
 ): Promise<LLMResponse> {
   const client = getOpenAI()
+
+  // FALLBACK MODE: If no API key, return dummy response
+  if (!client) {
+    console.log('⚠️  GPT unavailable - returning fallback response')
+    const userMessage = messages.find(m => m.role === 'user')?.content || ''
+    return {
+      content: JSON.stringify({
+        message: '[DEMO MODE] AI response would appear here',
+        note: 'Add OPENAI_API_KEY to enable real AI responses',
+        prompt: userMessage.substring(0, 100)
+      }),
+      model: 'demo-mode',
+      usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+      finishReason: 'fallback'
+    }
+  }
 
   const {
     temperature = 0.7,
@@ -344,10 +361,26 @@ export async function callBestLLM(
 
   // Last resort: Gemini
   if (process.env.GOOGLE_GEMINI_API_KEY) {
-    return await callGemini(messages, options)
+    try {
+      return await callGemini(messages, options)
+    } catch (error) {
+      console.warn('[LLM] All AI providers failed')
+    }
   }
 
-  throw new Error('No LLM API keys configured')
+  // FALLBACK MODE: Return dummy response if no API keys configured
+  console.log('⚠️  No LLM API keys configured - returning fallback response')
+  const userMessage = messages.find(m => m.role === 'user')?.content || ''
+  return {
+    content: JSON.stringify({
+      message: '[DEMO MODE] AI response would appear here',
+      note: 'Add AI API keys to enable real AI responses',
+      prompt: userMessage.substring(0, 100)
+    }),
+    model: 'demo-mode',
+    usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+    finishReason: 'fallback'
+  }
 }
 
 /**

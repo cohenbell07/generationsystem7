@@ -28,13 +28,20 @@ export interface GeneratedImage {
 export async function generateWithRunway(
   options: RunwayGenerateOptions
 ): Promise<GeneratedImage[]> {
-  if (!process.env.RUNWAY_API_KEY) {
-    throw new Error(
-      'RUNWAY_API_KEY is not set. Please add it to your .env file.'
-    )
-  }
-
   const { prompt, width, height, n = 1 } = options
+
+  // FALLBACK MODE: If no API key, return dummy/test images
+  if (!process.env.RUNWAY_API_KEY) {
+    console.log('⚠️  RUNWAY_API_KEY not set - using fallback test images')
+    const results: GeneratedImage[] = []
+    for (let i = 0; i < n; i++) {
+      const seed = Date.now() + i
+      results.push({
+        url: `https://picsum.photos/seed/${seed}/${width}/${height}`,
+      })
+    }
+    return results
+  }
 
   console.log(`🎨 Generating ${n} image(s) with Runway ML Gen-2...`)
   console.log(`   Prompt: "${prompt}"`)
