@@ -225,7 +225,63 @@ export default function TemplatesPage() {
                   </CardTitle>
                   <CardDescription>{selectedTemplate.description}</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                  <CardContent className="space-y-4">
+                  {/* Image Placeholder Swapper */}
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50">
+                    <ImageIcon className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                    <p className="text-sm text-gray-600 mb-3">Template Image Placeholder</p>
+                    <p className="text-xs text-gray-500 mb-4">
+                      This template uses image placeholders (e.g., car, logo) that can be swapped via AI prompt or photo upload
+                    </p>
+                    <div className="flex gap-2 justify-center">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          // Generate image from template prompt
+                          const prompt = `Professional ${selectedTemplate.industry} ${selectedTemplate.name.toLowerCase()} image, ${Object.values(formData).join(', ')}`
+                          window.location.href = `/studio/image?prompt=${encodeURIComponent(prompt)}`
+                        }}
+                      >
+                        <ImageIcon className="w-4 h-4 mr-1" />
+                        Generate Image
+                      </Button>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        id="template-image-upload"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            // Handle photo upload for template
+                            const reader = new FileReader()
+                            reader.onload = () => {
+                              setFormData({ ...formData, imagePlaceholder: reader.result as string })
+                            }
+                            reader.readAsDataURL(file)
+                          }
+                        }}
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => document.getElementById('template-image-upload')?.click()}
+                      >
+                        Upload Photo
+                      </Button>
+                    </div>
+                    {formData.imagePlaceholder && (
+                      <div className="mt-4">
+                        <img
+                          src={formData.imagePlaceholder}
+                          alt="Template placeholder"
+                          className="max-w-full max-h-32 mx-auto rounded"
+                        />
+                      </div>
+                    )}
+                  </div>
+
                   {selectedTemplate.fields.map((field) => (
                     <div key={field.name} className="space-y-2">
                       <Label>

@@ -26,15 +26,22 @@ export default function ImageStudioPage() {
 
   const handleDownload = async (imageUrl: string, filename: string) => {
     try {
-      const response = await fetch(imageUrl)
+      // Ensure we have the full URL path
+      const url = imageUrl.startsWith('http') ? imageUrl : `${window.location.origin}${imageUrl}`
+      
+      const response = await fetch(url)
+      if (!response.ok) {
+        throw new Error('Failed to fetch image')
+      }
+      
       const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
+      const downloadUrl = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
-      a.href = url
-      a.download = filename || 'cohengpt-image.png'
+      a.href = downloadUrl
+      a.download = filename || 'generated-image.png'
       document.body.appendChild(a)
       a.click()
-      window.URL.revokeObjectURL(url)
+      window.URL.revokeObjectURL(downloadUrl)
       document.body.removeChild(a)
 
       toast({
@@ -42,9 +49,11 @@ export default function ImageStudioPage() {
         description: 'Your image is being downloaded.',
       })
     } catch (error) {
+      console.error('Download error:', error)
       toast({
         title: 'Download failed',
         description: 'Could not download the image. Please try again.',
+        variant: 'destructive',
       })
     }
   }
@@ -183,16 +192,24 @@ export default function ImageStudioPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Product Compositing</CardTitle>
+                <CardTitle>Photo Input (Optional)</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label>Upload Product Image (Optional)</Label>
+                  <Label>Upload Photo/Image</Label>
+                  <p className="text-xs text-gray-500 mb-2">
+                    All models accept photo input. DALL·E will composite after generation; Gemini & Runway use it during generation.
+                  </p>
                   <Input
                     type="file"
                     accept="image/*"
                     onChange={(e) => setProductFile(e.target.files?.[0] || null)}
                   />
+                  {productFile && (
+                    <div className="mt-2 text-xs text-green-600">
+                      ✓ {productFile.name} ready
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -203,7 +220,7 @@ export default function ImageStudioPage() {
                     onChange={(e) => setPreserveProduct(e.target.checked)}
                     className="rounded"
                   />
-                  <Label htmlFor="preserve">Preserve & composite product</Label>
+                  <Label htmlFor="preserve">Composite photo with generated image</Label>
                 </div>
 
                 {preserveProduct && (
@@ -278,28 +295,36 @@ export default function ImageStudioPage() {
                       className="border rounded-lg overflow-hidden animate-in fade-in-50 duration-500"
                       style={{ animationDelay: `${index * 100}ms` }}
                     >
-                      <div className="relative aspect-square bg-gray-100">
+                      <div className="relative aspect-square bg-gray-100 group cursor-pointer hover:opacity-90 transition-opacity">
                         <img
-                          src={asset.url}
+                          src={asset.url.startsWith('http') ? asset.url : `${window.location.origin}${asset.url}`}
                           alt={asset.prompt}
                           className="w-full h-full object-contain"
                           loading="lazy"
                         />
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all flex items-center justify-center">
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => handleDownload(asset.url, asset.filename)}
+                          >
+                            <Download className="w-4 h-4 mr-1" />
+                            Download
+                          </Button>
+                        </div>
                       </div>
                       <div className="p-4 space-y-2">
                         <p className="text-sm text-gray-600 line-clamp-2">{asset.prompt}</p>
                         <div className="flex gap-2">
                           <Button
                             size="sm"
-                            variant="outline"
+                            variant="default"
                             className="flex-1"
                             onClick={() => handleDownload(asset.url, asset.filename)}
                           >
                             <Download className="w-4 h-4 mr-1" />
                             Download
-                          </Button>
-                          <Button size="sm" variant="outline" className="flex-1">
-                            Resize
                           </Button>
                         </div>
                         <p className="text-xs text-gray-500">

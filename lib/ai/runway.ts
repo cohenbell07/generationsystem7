@@ -12,6 +12,7 @@ export interface RunwayGenerateOptions {
   width: number
   height: number
   n?: number // Number of variations (default 1)
+  productImagePath?: string // Optional: photo input for image-to-image
 }
 
 export interface GeneratedImage {

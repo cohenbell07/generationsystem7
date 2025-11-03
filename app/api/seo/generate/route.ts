@@ -37,14 +37,15 @@ export async function POST(request: NextRequest) {
     const scoreResult = calculateSEOScore(seoOutput, platform, topic)
 
     // Step 3: Save to database
+    // Note: Store hashtags, metaDescription, and metaKeywords if available
     const seoPreset = await prisma.sEOPreset.create({
       data: {
         userId,
         platform,
         topic,
         title: seoOutput.title,
-        description: seoOutput.description || '',
-        tags: JSON.stringify(seoOutput.tags),
+        description: seoOutput.metaDescription || seoOutput.description || '',
+        tags: JSON.stringify([...seoOutput.tags, ...(seoOutput.hashtags || []), ...(seoOutput.suggestedHashtags || [])]),
         caption: seoOutput.caption,
         score: scoreResult.score,
         reasons: JSON.stringify(scoreResult.reasons),

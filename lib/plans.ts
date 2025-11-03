@@ -2,7 +2,7 @@
  * Plan and feature management
  */
 
-export type PlanType = 'FREE' | 'IMAGE' | 'SEO' | 'BUNDLE' | 'PRO'
+export type PlanType = 'FREE' | 'STARTER' | 'IMAGE' | 'SEO' | 'BUNDLE' | 'PRO'
 
 export interface Plan {
   id: PlanType
@@ -13,6 +13,7 @@ export interface Plan {
     imageGenerations?: number
     seoGenerations?: number
     scheduledPosts?: number
+    videoGenerations?: number // Video is expensive, manually processed
   }
 }
 
@@ -26,6 +27,26 @@ export const PLANS: Record<PlanType, Plan> = {
       imageGenerations: 5,
       seoGenerations: 5,
       scheduledPosts: 3,
+      videoGenerations: 0,
+    },
+  },
+  STARTER: {
+    id: 'STARTER',
+    name: 'Starter',
+    price: 39,
+    features: [
+      '3 videos per month',
+      '50 image generations',
+      '50 SEO generations',
+      'Basic templates',
+      'Platform presets',
+      'Manual video processing',
+    ],
+    limits: {
+      imageGenerations: 50,
+      seoGenerations: 50,
+      scheduledPosts: 10,
+      videoGenerations: 3, // Videos are manually processed
     },
   },
   IMAGE: {
@@ -41,6 +62,7 @@ export const PLANS: Record<PlanType, Plan> = {
     ],
     limits: {
       imageGenerations: -1, // Unlimited
+      videoGenerations: 0,
     },
   },
   SEO: {
@@ -53,41 +75,54 @@ export const PLANS: Record<PlanType, Plan> = {
       'SEO scoring & improvements',
       'Platform-aware content',
       'Keyword analysis',
+      'Hashtag suggestions',
+      'Meta descriptions',
     ],
     limits: {
       seoGenerations: -1,
+      videoGenerations: 0,
     },
   },
   BUNDLE: {
     id: 'BUNDLE',
     name: 'Complete Bundle',
-    price: 49,
+    price: 79,
     features: [
       'Image Studio (full)',
       'SEO Studio (full)',
+      '5 videos per month',
       'Post Scheduler',
       'Calendar view',
       'Multi-platform posting',
-      'Save $9/month',
+      'Auto-resize to all platforms',
     ],
     limits: {
       imageGenerations: -1,
       seoGenerations: -1,
       scheduledPosts: -1,
+      videoGenerations: 5, // Videos are manually processed
     },
   },
   PRO: {
     id: 'PRO',
-    name: 'Pro Add-On',
-    price: 29,
+    name: 'Pro',
+    price: 129,
     features: [
+      'Everything in Bundle',
+      '10 videos per month',
       'Performance analytics',
       'Best-time suggestions',
       'Autoposting',
       'Advanced metrics',
       'Engagement tracking',
+      'Smart auto-posting',
     ],
-    limits: {},
+    limits: {
+      imageGenerations: -1,
+      seoGenerations: -1,
+      scheduledPosts: -1,
+      videoGenerations: 10, // Videos are manually processed
+    },
   },
 }
 
@@ -97,13 +132,16 @@ export const PLANS: Record<PlanType, Plan> = {
 export function hasFeatureAccess(userPlan: PlanType, feature: string): boolean {
   switch (feature) {
     case 'image-generation':
-      return ['IMAGE', 'BUNDLE', 'PRO'].includes(userPlan)
+      return ['STARTER', 'IMAGE', 'BUNDLE', 'PRO'].includes(userPlan)
 
     case 'seo-generation':
-      return ['SEO', 'BUNDLE', 'PRO'].includes(userPlan)
+      return ['STARTER', 'SEO', 'BUNDLE', 'PRO'].includes(userPlan)
 
     case 'scheduler':
-      return ['BUNDLE', 'PRO'].includes(userPlan)
+      return ['STARTER', 'BUNDLE', 'PRO'].includes(userPlan)
+
+    case 'video-generation':
+      return ['STARTER', 'BUNDLE', 'PRO'].includes(userPlan)
 
     case 'analytics':
       return userPlan === 'PRO'
@@ -113,6 +151,9 @@ export function hasFeatureAccess(userPlan: PlanType, feature: string): boolean {
 
     case 'best-times':
       return userPlan === 'PRO'
+
+    case 'auto-resize':
+      return ['BUNDLE', 'PRO'].includes(userPlan)
 
     default:
       return false
@@ -124,8 +165,8 @@ export function hasFeatureAccess(userPlan: PlanType, feature: string): boolean {
  */
 export function isWithinLimits(
   userPlan: PlanType,
-  usage: { images?: number; seo?: number; posts?: number }
-): { images: boolean; seo: boolean; posts: boolean } {
+  usage: { images?: number; seo?: number; posts?: number; videos?: number }
+): { images: boolean; seo: boolean; posts: boolean; videos: boolean } {
   const plan = PLANS[userPlan]
 
   return {
@@ -141,5 +182,9 @@ export function isWithinLimits(
       !plan.limits.scheduledPosts ||
       plan.limits.scheduledPosts === -1 ||
       (usage.posts || 0) < plan.limits.scheduledPosts,
+    videos:
+      !plan.limits.videoGenerations ||
+      plan.limits.videoGenerations === -1 ||
+      (usage.videos || 0) < plan.limits.videoGenerations,
   }
 }

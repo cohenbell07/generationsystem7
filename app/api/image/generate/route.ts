@@ -42,20 +42,25 @@ export async function POST(request: NextRequest) {
     // Step 1: Generate image(s) using selected model
     let generatedImages: Array<{ url: string }>
 
+    // All models now support photo input
+    // For DALL·E, we'll composite the photo after generation
+    // For Gemini and Runway, we pass it directly
     if (model === 'dalle') {
+      // DALL·E doesn't support image input directly, so generate and composite
       generatedImages = await generateWithDalle({
         prompt,
         width,
         height,
         n: 1, // DALL·E 3 only supports 1
       })
+      // If photo input provided, we'll composite it in the next step
     } else if (model === 'gemini') {
       generatedImages = await generateWithGeminiImage({
         prompt,
         width,
         height,
         n: Math.min(variations, 2),
-        productImagePath: preserveProduct && productImage ? productImage : undefined,
+        productImagePath: productImage || undefined, // Accept photo input for all requests
       })
     } else if (model === 'runway') {
       generatedImages = await generateWithRunway({
@@ -63,6 +68,7 @@ export async function POST(request: NextRequest) {
         width,
         height,
         n: Math.min(variations, 2),
+        productImagePath: productImage || undefined, // Accept photo input
       })
     } else {
       return NextResponse.json({ error: 'Invalid model. Use "dalle", "gemini", or "runway"' }, { status: 400 })
@@ -83,30 +89,39 @@ export async function POST(request: NextRequest) {
       const genImage = generatedImages[i]
       let finalImagePath: string
 
-      // If product compositing is requested
-      if (preserveProduct && productImage) {
-        console.log(`   Compositing product into generated image ${i + 1}...`)
+      // If photo input provided, composite it with generated image
+      // For DALL·E, always composite if photo provided
+      // For Gemini/Runway, composite if preserveProduct is true (they can handle it in generation too)
+      if (productImage) {
+        const shouldComposite = model === 'dalle' || preserveProduct
+        if (shouldComposite) {
+          console.log(`   Compositing photo into generated image ${i + 1}...`)
 
-        // Save generated background
-        const bgFilename = generateFilename('bg.png', 'generated')
-        const bgPath = await downloadAndSave(genImage.url, bgFilename, 'backgrounds')
+          // Save generated background
+          const bgFilename = generateFilename('bg.png', 'generated')
+          const bgPath = await downloadAndSave(genImage.url, bgFilename, 'backgrounds')
 
-        // Composite product over background
-        const compositedBuffer = await compositeProductImage({
-          backgroundPath: bgPath,
-          productPath: productImage, // Assuming it's already saved
-          placement,
-          scale,
-          rotation,
-          outputWidth: width,
-          outputHeight: height,
-        })
+          // Composite photo over background
+          const compositedBuffer = await compositeProductImage({
+            backgroundPath: bgPath,
+            productPath: productImage, // Photo input
+            placement,
+            scale,
+            rotation,
+            outputWidth: width,
+            outputHeight: height,
+          })
 
-        // Save composited image
-        const filename = generateFilename('composited.png', model)
-        finalImagePath = await saveFile(compositedBuffer, filename, 'images')
+          // Save composited image
+          const filename = generateFilename('composited.png', model)
+          finalImagePath = await saveFile(compositedBuffer, filename, 'images')
+        } else {
+          // Photo was used in generation (Gemini/Runway), just save the result
+          const filename = generateFilename('generated.png', model)
+          finalImagePath = await downloadAndSave(genImage.url, filename, 'images')
+        }
       } else {
-        // No compositing - just save the generated image
+        // No photo input - just save the generated image
         const filename = generateFilename('generated.png', model)
         finalImagePath = await downloadAndSave(genImage.url, filename, 'images')
       }
@@ -122,11 +137,11 @@ export async function POST(request: NextRequest) {
           width,
           height,
           platform: platform || null,
-          hasProduct: preserveProduct && !!productImage,
+          hasProduct: !!productImage,
           productUrl: productImage || null,
-          placement: preserveProduct ? placement : null,
-          scale: preserveProduct ? scale : null,
-          rotation: preserveProduct ? rotation : null,
+          placement: productImage ? placement : null,
+          scale: productImage ? scale : null,
+          rotation: productImage ? rotation : null,
           costEstimate: costPerImage,
         },
       })

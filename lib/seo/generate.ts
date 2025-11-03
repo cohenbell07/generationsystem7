@@ -29,6 +29,10 @@ export interface SEOOutput {
   tags: string[]
   caption: string
   keywords: string[]
+  hashtags: string[] // Platform-specific hashtags
+  metaDescription?: string // For blog/SEO content
+  metaKeywords?: string[] // Additional meta keywords
+  suggestedHashtags?: string[] // Trending/popular hashtags
 }
 
 /**
@@ -85,7 +89,11 @@ Return ONLY valid JSON with this exact structure:
   "description": "string (${profile.descriptionMaxLength > 0 ? `max ${profile.descriptionMaxLength} chars` : 'not applicable'})",
   "tags": ["array of ${profile.maxTags} relevant tags in ${profile.tagFormat} format"],
   "caption": "string (max ${profile.captionMaxLength} chars, engaging and platform-appropriate)",
-  "keywords": ["array of primary keywords identified"]
+  "keywords": ["array of primary keywords identified"],
+  "hashtags": ["array of ${profile.maxTags} platform-optimized hashtags"],
+  "metaDescription": "string (SEO-optimized meta description, max 160 chars)",
+  "metaKeywords": ["array of 5-10 SEO keywords"],
+  "suggestedHashtags": ["array of trending/popular hashtags related to topic"]
 }`
 
   const userPrompt = `Topic: ${topic}

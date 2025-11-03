@@ -225,22 +225,89 @@ export default function SEOStudioPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-wrap gap-2 mb-4">
-                      {result.tags.map((tag: string, i: number) => (
+                      {result.tags?.map((tag: string, i: number) => (
                         <Badge key={i} variant="secondary">
                           {tag}
                         </Badge>
                       ))}
                     </div>
+                    {result.hashtags && result.hashtags.length > 0 && (
+                      <div className="mb-4">
+                        <h4 className="text-sm font-semibold mb-2">Platform Hashtags:</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {result.hashtags.map((tag: string, i: number) => (
+                            <Badge key={i} variant="outline">
+                              #{tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {result.suggestedHashtags && result.suggestedHashtags.length > 0 && (
+                      <div className="mb-4">
+                        <h4 className="text-sm font-semibold mb-2">Suggested Hashtags:</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {result.suggestedHashtags.map((tag: string, i: number) => (
+                            <Badge key={i} variant="outline" className="text-xs">
+                              #{tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => copyToClipboard(result.tags.join(' '))}
+                      onClick={() => copyToClipboard([...result.tags, ...(result.hashtags || [])].join(' '))}
                     >
                       <Copy className="w-4 h-4 mr-2" />
                       Copy All Tags
                     </Button>
                   </CardContent>
                 </Card>
+
+                {/* Keywords */}
+                {result.keywords && result.keywords.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Keywords</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {result.keywords.map((keyword: string, i: number) => (
+                          <Badge key={i} variant="outline">
+                            {keyword}
+                          </Badge>
+                        ))}
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => copyToClipboard(result.keywords.join(', '))}
+                      >
+                        <Copy className="w-4 h-4 mr-2" />
+                        Copy Keywords
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Meta Description */}
+                {result.metaDescription && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Meta Description</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-start gap-2">
+                        <p className="flex-1">{result.metaDescription}</p>
+                        <Button size="sm" variant="ghost" onClick={() => copyToClipboard(result.metaDescription)}>
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Caption */}
                 <Card>
