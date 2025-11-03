@@ -35,7 +35,6 @@ export default function PricingPage() {
       toast({
         title: 'Subscription failed',
         description: error.message || 'Could not initiate checkout. Please try again.',
-        variant: 'destructive',
       })
       setLoadingPlan(null)
     }
